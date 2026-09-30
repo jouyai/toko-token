@@ -5,10 +5,16 @@ import { config } from "./config.js";
 // masih jauh di bawah Number.MAX_SAFE_INTEGER (~9 kuadriliun).
 pg.types.setTypeParser(20, (v) => Number(v));
 
+// Di Vercel (serverless) tiap instance cukup beberapa koneksi, dan koneksi idle cepat ditutup.
+// Pakai connection string "pooled" dari Neon/Supabase.
+const serverless = !!process.env.VERCEL;
 export const pool = new pg.Pool({
   connectionString: config.databaseUrl,
-  max: Number(process.env.DB_POOL_MAX || 10),
+  max: Number(process.env.DB_POOL_MAX || (serverless ? 3 : 10)),
+  idleTimeoutMillis: serverless ? 5_000 : 30_000,
+  connectionTimeoutMillis: 10_000,
 });
+pool.on("error", (err) => console.error("[db] koneksi idle error:", err.message));
 
 export const query = (text, params) => pool.query(text, params);
 
