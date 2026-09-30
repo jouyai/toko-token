@@ -36,6 +36,50 @@ Pembeli (SDK OpenAI)                           Kamu
   - Daftar pembayaran.
 - **Keamanan:** CSP ketat, proteksi CSRF, rate limit untuk login, cek konfigurasi wajib saat start di production, dan dashboard 9router yang tidak dibuka ke internet.
 
+## Deploy ke Vercel
+
+Website dan API jalan di Vercel sebagai satu function (`api/index.js`), dan file di `public/` dilayani oleh CDN Vercel. **9router tidak bisa jalan di Vercel.** 9router harus hidup di tempat lain dan bisa diakses lewat internet.
+
+### Yang perlu disiapkan dulu
+
+1. **9router yang bisa diakses publik lewat HTTPS**, dengan `REQUIRE_API_KEY=true`. Pilihannya:
+   - VPS: jalankan `docker compose up -d 9router`, lalu pasang domain dan HTTPS di depannya.
+   - Komputer sendiri + Cloudflare Tunnel: `cloudflared tunnel --url http://localhost:20128`. Server ini harus menyala terus.
+2. **Database Postgres:** di Vercel buka Storage → Create → **Neon**, pilih region Singapore. `DATABASE_URL` akan otomatis terisi di project.
+3. **Midtrans** (Server Key sandbox dulu tidak apa-apa) dan **SMTP** untuk email reset password.
+
+### Langkah deploy
+
+1. Buka [vercel.com/new](https://vercel.com/new), lalu import repo `jouyai/toko-token`. Framework Preset otomatis "Other", dan semua pengaturan build sudah ada di `vercel.json`.
+2. Buka Settings → Environment Variables, lalu isi:
+
+   | Variable | Contoh |
+   |---|---|
+   | `APP_URL` | `https://toko-token.vercel.app` (atau domainmu) |
+   | `ROUTER_BASE_URL` | `https://router.domainmu.id/v1` |
+   | `ROUTER_API_KEY` | key dari dashboard 9router |
+   | `PAYMENT_PROVIDER` | `midtrans` |
+   | `MIDTRANS_SERVER_KEY` | `SB-Mid-server-…` |
+   | `MIDTRANS_IS_PRODUCTION` | `false` |
+   | `SMTP_URL`, `MAIL_FROM` | server email |
+   | `SUPPORT_EMAIL`, `SUPPORT_WHATSAPP` | kontak support |
+   | `DATABASE_URL` | otomatis dari Neon (pakai yang *pooled*) |
+
+3. Klik Deploy. Migrasi database berjalan otomatis saat request pertama masuk.
+4. Cek `https://domainmu/healthz`, hasilnya harus `{"ok":true}`. Kalau muncul "Server belum siap", buka tab Logs di Vercel. Di sana tertulis variable apa yang belum diisi.
+5. Daftar akun di website, lalu jadikan admin dari komputermu (pakai `DATABASE_URL` dari Vercel):
+   ```bash
+   DATABASE_URL="postgres://…" npm run admin -- promote emailkamu@contoh.com
+   ```
+6. Di dashboard Midtrans, isi Notification URL dengan `https://domainmu/api/payments/midtrans/notify`.
+
+### Catatan Vercel
+
+- **Paket Hobby hanya boleh untuk pemakaian non-komersial.** Karena toko ini berjualan, pakai paket **Pro**.
+- Stream jawaban dibatasi `maxDuration: 300` detik per request. Kalau paketmu tidak mengizinkan 300 detik, turunkan angkanya di `vercel.json`.
+- Rate limit dan batas request bersamaan disimpan di memori, jadi berlaku per instance function, bukan global. Untuk trafik besar, pindahkan ke Redis (misalnya Upstash).
+- Region function diset `sin1` (Singapura). Taruh database di region yang sama.
+
 ## Deploy ke VPS (Docker)
 
 Kebutuhan: VPS Linux (minimal 1 vCPU / 1–2 GB RAM), Docker + Docker Compose, dan domain yang DNS-nya sudah mengarah ke IP VPS.
