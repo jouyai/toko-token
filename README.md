@@ -55,7 +55,7 @@ Website dan API jalan di Vercel sebagai satu function (`api/index.js`), dan file
 
    | Variable | Contoh |
    |---|---|
-   | `APP_URL` | `https://toko-token.vercel.app` (atau domainmu) |
+   | `APP_URL` | `https://toko-token.vercel.app` (atau domainmu); kalau kosong dipakai domain production Vercel |
    | `ROUTER_BASE_URL` | `https://router.domainmu.id/v1` |
    | `ROUTER_API_KEY` | key dari dashboard 9router |
    | `PAYMENT_PROVIDER` | `midtrans` |
@@ -63,7 +63,7 @@ Website dan API jalan di Vercel sebagai satu function (`api/index.js`), dan file
    | `MIDTRANS_IS_PRODUCTION` | `false` |
    | `SMTP_URL`, `MAIL_FROM` | server email |
    | `SUPPORT_EMAIL`, `SUPPORT_WHATSAPP` | kontak support |
-   | `DATABASE_URL` | otomatis dari Neon (pakai yang *pooled*) |
+   | `DATABASE_URL` | otomatis dari Neon (pakai yang *pooled*); `POSTGRES_URL` juga diterima |
 
 3. Klik Deploy. Migrasi database berjalan otomatis saat request pertama masuk.
 4. Cek `https://domainmu/healthz`, hasilnya harus `{"ok":true}`. Kalau muncul "Server belum siap", buka tab Logs di Vercel. Di sana tertulis variable apa yang belum diisi.
@@ -72,6 +72,19 @@ Website dan API jalan di Vercel sebagai satu function (`api/index.js`), dan file
    DATABASE_URL="postgres://…" npm run admin -- promote emailkamu@contoh.com
    ```
 6. Di dashboard Midtrans, isi Notification URL dengan `https://domainmu/api/payments/midtrans/notify`.
+
+### Kalau ada error setelah deploy
+
+Buka `https://domainmu/healthz`. Isinya menjelaskan penyebab error tanpa menampilkan nilai rahasia.
+
+| Isi `/healthz` | Artinya & solusinya |
+|---|---|
+| `problems: ["… wajib diisi"]` | Environment variable belum diisi. Tambahkan di Vercel → Settings → Environment Variables, lalu **Redeploy** (perubahan env baru berlaku setelah redeploy). |
+| `Database: ENOTFOUND / ECONNREFUSED / password authentication failed` | `DATABASE_URL` salah atau database belum dibuat. Pakai connection string dari Neon (Storage → Neon → `.env.local`). |
+| `ROUTER_BASE_URL tidak boleh localhost di Vercel` | Vercel tidak bisa mengakses `localhost` di komputermu. Pakai alamat publik 9router (VPS / Cloudflare Tunnel). |
+| `router: "error: ENOTFOUND …"` | Domain 9router tidak ditemukan. Cek `ROUTER_BASE_URL`. |
+| `router: "error: HTTP 401"` | `ROUTER_API_KEY` salah, atau belum dibuat di dashboard 9router. |
+| `{"ok":true,"db":"ok","router":"ok (N model)"}` | Semua normal. |
 
 ### Catatan Vercel
 
