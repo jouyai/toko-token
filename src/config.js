@@ -52,6 +52,9 @@ export const config = {
     maxBodyMb: int(env.MAX_BODY_MB, 20),
   },
 
+  // Kunci untuk menyamarkan id tool call. Default: turunan dari ROUTER_API_KEY.
+  idSecret: env.ID_SECRET || env.ROUTER_API_KEY || "",
+
   session: {
     cookieName: "tt_sess",
     ttlDays: int(env.SESSION_TTL_DAYS, 30),

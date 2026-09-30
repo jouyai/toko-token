@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SseTransformer } from "../src/proxy/sse.js";
+import { decodeToolId, encodeToolId } from "../src/proxy/sanitize.js";
+import { publicIdFor } from "../src/routes/admin.js";
 import { affordableOutputTokens, costMilli } from "../src/lib/money.js";
 
 test("costMilli membulatkan ke atas dan tidak pernah kurang", () => {
@@ -16,7 +18,7 @@ test("affordableOutputTokens", () => {
 });
 
 test("SseTransformer: potongan terbelah, ganti model, ambil usage", () => {
-  const t = new SseTransformer({ publicModel: "pub", clientWantsUsage: false });
+  const t = new SseTransformer({ id: "chatcmpl-x", publicModel: "pub", clientWantsUsage: false });
   const ev = (o) => `data: ${JSON.stringify(o)}\n\n`;
   const all =
     ev({ model: "up/x", choices: [{ delta: { content: "Halo" } }] }) +
@@ -30,4 +32,19 @@ test("SseTransformer: potongan terbelah, ganti model, ambil usage", () => {
   assert.match(out, /"model":"pub"/);
   assert.doesNotMatch(out, /up\/x|usage/);
   assert.match(out, /\[DONE\]/);
+});
+
+test("id tool call bisa bolak-balik dan tidak menampakkan aslinya", () => {
+  const enc = encodeToolId("toolu_01ABC");
+  assert.match(enc, /^call_tt/);
+  assert.doesNotMatch(enc, /toolu/);
+  assert.equal(decodeToolId(enc), "toolu_01ABC");
+  assert.equal(encodeToolId("toolu_01ABC"), enc); // deterministik
+  assert.equal(decodeToolId("call_biasa"), "call_biasa");
+});
+
+test("publicIdFor membuang prefix router/provider", () => {
+  assert.equal(publicIdFor("cc/claude-sonnet-4.5"), "claude-sonnet-4.5");
+  assert.equal(publicIdFor("openrouter/meta-llama/Llama 3.3 70B"), "llama-3.3-70b");
+  assert.equal(publicIdFor("combo-hemat"), "combo-hemat");
 });

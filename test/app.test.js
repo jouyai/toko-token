@@ -134,6 +134,28 @@ test("chat non-streaming: model diganti, saldo dipotong sesuai usage", async () 
   // 1000 × Rp10.000/1M + 500 × Rp40.000/1M = Rp10 + Rp20 = Rp30
   assert.equal(before - (await balance()), 30_000);
   assert.ok(r.headers.get("x-toko-balance-rp"));
+  // Tidak ada jejak router/provider di respons.
+  assert.match(j.id, /^chatcmpl-/);
+  assert.doesNotMatch(JSON.stringify(j), /rahasia|upstream|glm\/|provider|fingerprint|cache_creation/);
+  assert.deepEqual(Object.keys(j.usage).sort(), ["completion_tokens", "prompt_tokens", "total_tokens"]);
+});
+
+test("id tool call disamarkan dan dikembalikan saat dikirim lagi", async () => {
+  const tools = [{ type: "function", function: { name: "cuaca", parameters: { type: "object" } } }];
+  const r = await v1("/chat/completions", { model: "glm-5.1", tools, messages: [{ role: "user", content: "cuaca?" }] });
+  const j = await r.json();
+  const call = j.choices[0].message.tool_calls[0];
+  assert.match(call.id, /^call_tt/);
+  assert.doesNotMatch(JSON.stringify(j), /toolu|rahasia|provider_meta/);
+
+  await v1("/chat/completions", { model: "glm-5.1", messages: [
+    { role: "user", content: "cuaca?" },
+    { role: "assistant", content: null, tool_calls: [call] },
+    { role: "tool", tool_call_id: call.id, content: "cerah" },
+  ] });
+  const sent = router.state.lastBody.messages;
+  assert.equal(sent[1].tool_calls[0].id, "toolu_rahasia123");
+  assert.equal(sent[2].tool_call_id, "toolu_rahasia123");
 });
 
 test("chat streaming: usage dibuang kalau tidak diminta, tetap ditagih", async () => {
@@ -142,7 +164,7 @@ test("chat streaming: usage dibuang kalau tidak diminta, tetap ditagih", async (
   assert.equal(r.status, 200);
   const text = await r.text();
   assert.match(text, /"model":"glm-5.1"/);
-  assert.doesNotMatch(text, /glm\/glm-5.1/);
+  assert.doesNotMatch(text, /glm\/glm-5.1|rahasia|upstream|OPENROUTER/);
   assert.doesNotMatch(text, /usage/);
   assert.match(text, /\[DONE\]/);
   assert.equal(router.state.lastBody.stream_options.include_usage, true);
@@ -165,7 +187,8 @@ test("error dari 9router tidak ditagih", async () => {
   const before = await balance();
   const r = await v1("/chat/completions", { model: "rusak", messages: [{ role: "user", content: "hai" }] });
   assert.equal(r.status, 400);
-  assert.equal((await r.json()).error.message, "context too long");
+  const msg = (await r.json()).error.message;
+  assert.match(msg, /Input terlalu panjang/);
   assert.equal(await balance(), before);
 });
 
@@ -200,6 +223,16 @@ test("admin koreksi saldo tercatat di ledger", async () => {
   const l = await b("GET", "/api/account/ledger");
   assert.equal(l.json.ledger[0].kind, "adjustment");
   assert.equal((await b("GET", "/api/admin/stats")).status, 404, "user biasa tidak bisa lihat admin");
+});
+
+test("admin impor model 9router tanpa prefix, nonaktif secara default", async () => {
+  const r = await admin("POST", "/api/admin/models/import", { input_price_rp: 5000, output_price_rp: 9000 });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json.added, [{ id: "model", upstream_model: "cheap/model" }]);
+  const pub = await fetch(app.url + "/api/public/models").then((x) => x.json());
+  assert.ok(!pub.models.some((m) => m.id === "model"), "model impor belum dijual sebelum diaktifkan");
+  const again = await admin("POST", "/api/admin/models/import", { input_price_rp: 5000, output_price_rp: 9000 });
+  assert.equal(again.json.added.length, 0);
 });
 
 test("reset password lewat token", async () => {

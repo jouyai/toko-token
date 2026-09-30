@@ -53,6 +53,10 @@ async function loadModels() {
     $("#routerStatus").textContent = `✓ 9router tersambung · ${u.models.length} model tersedia`;
     $("#upstreamList").innerHTML = u.models.map((id) => `<option value="${esc(id)}"></option>`).join("");
   }
+  const mapped = new Set(models.map((m) => m.upstream_model));
+  const fresh = upstream ? [...upstream].filter((id) => !mapped.has(id)).length : 0;
+  $("#importInfo").textContent = upstream ? `${fresh} model belum dijual` : "";
+  $("#importBtn").disabled = !fresh;
   $("#modelRows").innerHTML = models.length
     ? models.map((m, i) => `<tr>
         <td><b>${esc(m.display_name)}</b><br><code>${esc(m.id)}</code></td>
@@ -95,7 +99,15 @@ bindForm(mf, async (d) => {
   });
   toast(`Model ${id} disimpan`);
   resetModelForm();
-  loadModels();
+  await loadModels();
+});
+
+bindForm($("#importForm"), async (d) => {
+  const out = await api("POST", "/admin/models/import", {
+    input_price_rp: Number(d.input_price_rp), output_price_rp: Number(d.output_price_rp), active: d.active === "1",
+  });
+  toast(out.added.length ? `${out.added.length} model diimpor${d.active === "1" ? " & aktif" : " (nonaktif, aktifkan setelah cek harga)"}` : "Tidak ada model baru");
+  await loadModels();
 });
 
 // ---------- User ----------
