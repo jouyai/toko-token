@@ -1,0 +1,9 @@
+# HTTPS otomatis (Let's Encrypt). Pastikan DNS domain sudah mengarah ke server.
+{$DOMAIN} {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	reverse_proxy app:3000 {
+		# Kirim stream token (SSE) langsung tanpa buffering.
+		flush_interval -1
+	}
+}
