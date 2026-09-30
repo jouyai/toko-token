@@ -12,6 +12,7 @@ import accountRoutes from "./routes/account.js";
 import adminRoutes from "./routes/admin.js";
 import publicRoutes from "./routes/public.js";
 import proxy from "./proxy/openai.js";
+import { listUpstreamModels } from "./proxy/router-client.js";
 
 const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public");
 
@@ -42,13 +43,23 @@ export function createApp() {
     next();
   });
 
+  // ok = database hidup. router = status koneksi ke 9router (informasi untuk admin).
   app.get("/healthz", async (_req, res) => {
+    res.set("Cache-Control", "no-store");
+    let db = "ok";
     try {
       await pool.query("SELECT 1");
-      res.json({ ok: true });
-    } catch {
-      res.status(503).json({ ok: false });
+    } catch (err) {
+      db = `error: ${err.code || err.message}`;
     }
+    let router;
+    try {
+      const models = await listUpstreamModels();
+      router = `ok (${models.length} model)`;
+    } catch (err) {
+      router = `error: ${err.cause?.code || err.message} — cek ROUTER_BASE_URL & ROUTER_API_KEY`;
+    }
+    res.status(db === "ok" ? 200 : 503).json({ ok: db === "ok", db, router });
   });
 
   // API untuk pembeli (format OpenAI), dilayani dari domain yang sama: https://domain/v1

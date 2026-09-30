@@ -10,10 +10,12 @@ const isProd = env.NODE_ENV === "production";
 export const config = {
   isProd,
   port: int(env.PORT, 3000),
-  appUrl: (env.APP_URL || "http://localhost:3000").replace(/\/$/, ""),
+  // Di Vercel, kalau APP_URL kosong dipakai domain production project-nya.
+  appUrl: (env.APP_URL || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")).replace(/\/$/, ""),
   appName: env.APP_NAME || "Toko Token",
   trustProxy: int(env.TRUST_PROXY, 1),
-  databaseUrl: env.DATABASE_URL || "postgres://toko:toko@localhost:5432/toko",
+  // Integrasi Neon/Vercel Postgres bisa memberi nama variable berbeda.
+  databaseUrl: env.DATABASE_URL || env.POSTGRES_URL || env.DATABASE_URL_UNPOOLED || "postgres://toko:toko@localhost:5432/toko",
 
   // ---- 9router ----
   router: {
@@ -71,15 +73,26 @@ export const config = {
   },
 };
 
-export function assertProductionConfig() {
-  if (!isProd) return;
+// Daftar masalah konfigurasi production (hanya nama variable, tanpa nilai rahasia).
+export function configProblems() {
+  if (!isProd) return [];
   const problems = [];
-  if (!config.appUrl.startsWith("https://")) problems.push("APP_URL harus https:// di production");
+  if (!env.DATABASE_URL && !env.POSTGRES_URL && !env.DATABASE_URL_UNPOOLED) problems.push("DATABASE_URL wajib diisi (connection string Postgres, mis. dari Neon)");
+  if (!config.appUrl.startsWith("https://")) problems.push("APP_URL harus diisi dengan https://domain-kamu");
+  if (!env.ROUTER_BASE_URL) problems.push("ROUTER_BASE_URL wajib diisi (alamat publik 9router, diakhiri /v1)");
+  else if (/localhost|127\.0\.0\.1/.test(config.router.baseUrl) && env.VERCEL) problems.push("ROUTER_BASE_URL tidak boleh localhost di Vercel; 9router harus bisa diakses dari internet");
   if (!config.router.apiKey) problems.push("ROUTER_API_KEY wajib diisi (aktifkan REQUIRE_API_KEY=true di 9router)");
   if (config.payment.provider === "mock") problems.push("PAYMENT_PROVIDER=mock tidak boleh dipakai di production");
   if (config.payment.provider === "midtrans" && !config.payment.midtrans.serverKey) problems.push("MIDTRANS_SERVER_KEY wajib diisi");
   if (!config.mail.smtpUrl) problems.push("SMTP_URL wajib diisi (untuk reset password)");
+  return problems;
+}
+
+export function assertProductionConfig() {
+  const problems = configProblems();
   if (problems.length) {
-    throw new Error("Konfigurasi production belum lengkap:\n - " + problems.join("\n - "));
+    const err = new Error("Konfigurasi production belum lengkap:\n - " + problems.join("\n - "));
+    err.problems = problems;
+    throw err;
   }
 }
