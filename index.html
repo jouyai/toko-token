@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Toko Token — Isi Token AI</title>
+  <meta name="description" content="Beli token AI model kayak isi token listrik. Mulai Rp5.000 per 1 juta token. Bayar QRIS, langsung pakai." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Ticker harga berjalan -->
+  <div class="ticker" aria-hidden="true"><div class="ticker__track" id="ticker"></div></div>
+
+  <header class="nav wrap">
+    <a href="#" class="logo"><span class="logo__bolt">⚡</span>TOKO<b>TOKEN</b></a>
+    <nav class="nav__links">
+      <a href="#harga">Harga</a>
+      <a href="#cara">Cara Kerja</a>
+      <a href="#dev">Developer</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a href="#meter" class="btn btn--ink">Isi Token</a>
+  </header>
+
+  <!-- HERO + METERAN -->
+  <section class="hero wrap" id="meter">
+    <div class="hero__copy">
+      <p class="eyebrow">No. 001 — Prabayar untuk AI</p>
+      <h1>Isi token AI<br />kayak isi <span class="strike">pulsa</span> <em>token listrik.</em></h1>
+      <p class="lead">Pilih model, masukin nominal, bayar QRIS. Token langsung masuk ke saldo API kamu. Nggak ada langganan bulanan, nggak ada kartu kredit.</p>
+      <ul class="facts">
+        <li><b>Rp5.000</b><span>per 1 juta token</span></li>
+        <li><b>0</b><span>biaya bulanan</span></li>
+        <li><b>1 key</b><span>semua model</span></li>
+      </ul>
+    </div>
+
+    <!-- Perangkat meteran -->
+    <div class="device" role="group" aria-label="Kalkulator token">
+      <div class="device__head">
+        <span class="device__brand">TT-01 · METER TOKEN</span>
+        <span class="device__led" id="led"></span>
+      </div>
+
+      <div class="lcd">
+        <div class="lcd__row">
+          <span class="lcd__label" id="lcdModel">—</span>
+          <span class="lcd__label">TOKEN</span>
+        </div>
+        <div class="lcd__digits" id="lcdDigits" aria-live="polite"></div>
+        <div class="lcd__row">
+          <span class="lcd__label" id="lcdRate">—</span>
+          <span class="lcd__label" id="lcdRp">—</span>
+        </div>
+      </div>
+
+      <label class="device__field">
+        <span>Model</span>
+        <select id="modelSelect"></select>
+      </label>
+
+      <div class="keypad" id="keypad"></div>
+
+      <label class="device__field device__field--custom">
+        <span>Nominal lain</span>
+        <div class="rp-input"><i>Rp</i><input id="customRp" type="text" inputmode="numeric" placeholder="mis. 15.000" /></div>
+      </label>
+
+      <button class="btn btn--signal btn--block" id="buyBtn">Bayar &amp; Cetak Token ↵</button>
+      <p class="device__note">Hitungan pakai tarif input. Output dihitung sesuai tabel harga.</p>
+    </div>
+  </section>
+
+  <!-- PAPAN HARGA -->
+  <section class="board-section" id="harga">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">No. 002 — Papan Harga</p>
+        <h2>Harga per 1 juta token.<br />Ditulis besar, biar nggak ada yang ngumpet.</h2>
+      </div>
+      <div class="board" role="table" aria-label="Harga model">
+        <div class="board__row board__row--head" role="row">
+          <span role="columnheader">Model</span>
+          <span role="columnheader">Konteks</span>
+          <span role="columnheader">Input / 1M</span>
+          <span role="columnheader">Output / 1M</span>
+          <span role="columnheader"></span>
+        </div>
+        <div id="boardRows"></div>
+      </div>
+      <p class="board__foot">* Harga dalam Rupiah, sudah termasuk pajak. Token yang dibeli nggak hangus selama 12 bulan.</p>
+    </div>
+  </section>
+
+  <!-- CARA KERJA -->
+  <section class="how wrap" id="cara">
+    <div class="section-head">
+      <p class="eyebrow">No. 003 — Cara Kerja</p>
+      <h2>Tiga langkah. Lebih cepet dari antri di minimarket.</h2>
+    </div>
+    <ol class="steps">
+      <li class="step">
+        <span class="step__no">01</span>
+        <h3>Pilih nominal</h3>
+        <p>Mulai dari Rp5.000. Mau beli receh buat nyoba, atau borongan buat produksi, bebas.</p>
+      </li>
+      <li class="step">
+        <span class="step__no">02</span>
+        <h3>Scan QRIS</h3>
+        <p>Bayar dari e-wallet atau m-banking apa aja. Konfirmasi otomatis dalam hitungan detik.</p>
+      </li>
+      <li class="step">
+        <span class="step__no">03</span>
+        <h3>Pakai API key</h3>
+        <p>Saldo token masuk ke key kamu. Satu endpoint, format kompatibel OpenAI, semua model.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- DEVELOPER -->
+  <section class="dev wrap" id="dev">
+    <div class="dev__copy">
+      <p class="eyebrow">No. 004 — Buat Developer</p>
+      <h2>Ganti <code>base_url</code>,<br />selesai.</h2>
+      <p class="lead">Endpoint kompatibel OpenAI. Library yang udah kamu pakai tinggal diarahkan ke Toko Token. Sisa saldo selalu kelihatan di header respons.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab is-active" data-tab="curl" role="tab">cURL</button>
+        <button class="tab" data-tab="py" role="tab">Python</button>
+        <button class="tab" data-tab="js" role="tab">Node</button>
+      </div>
+    </div>
+    <pre class="code" id="code"></pre>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq wrap" id="faq">
+    <div class="section-head">
+      <p class="eyebrow">No. 005 — Tanya Jawab</p>
+      <h2>Yang sering ditanyain.</h2>
+    </div>
+    <div class="faq__list">
+      <details><summary>Token itu apa sih?</summary><p>Potongan teks yang dibaca dan ditulis model. Kira-kira 1 token ≈ 3–4 huruf. 1 juta token itu kurang lebih setara 1.500 halaman teks.</p></details>
+      <details><summary>Saldo bisa hangus?</summary><p>Token berlaku 12 bulan sejak pembelian terakhir. Tiap isi ulang, masa berlaku semua saldo ikut diperpanjang.</p></details>
+      <details><summary>Bisa dipakai buat banyak model?</summary><p>Bisa. Saldo kamu satu dompet rupiah; tiap request dipotong sesuai tarif model yang dipanggil.</p></details>
+      <details><summary>Ada faktur buat perusahaan?</summary><p>Ada. Tiap transaksi dapat struk digital, dan faktur pajak bisa diminta dari dashboard.</p></details>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap footer__inner">
+      <span class="logo"><span class="logo__bolt">⚡</span>TOKO<b>TOKEN</b></span>
+      <span>Dibuat di Indonesia · © <span id="year"></span></span>
+    </div>
+  </footer>
+
+  <!-- STRUK / CHECKOUT -->
+  <div class="overlay" id="overlay" hidden>
+    <div class="printer">
+      <div class="printer__slot"></div>
+      <div class="receipt" id="receipt" role="dialog" aria-modal="true" aria-labelledby="rcTitle">
+        <div class="receipt__body">
+          <p class="rc-center rc-big" id="rcTitle">TOKO TOKEN</p>
+          <p class="rc-center">Struk Pembelian Token AI</p>
+          <p class="rc-center rc-dim" id="rcDate"></p>
+          <hr />
+          <div class="rc-line"><span>Model</span><span id="rcModel"></span></div>
+          <div class="rc-line"><span>Nominal</span><span id="rcRp"></span></div>
+          <div class="rc-line"><span>Tarif</span><span id="rcRate"></span></div>
+          <div class="rc-line rc-strong"><span>Jml Token</span><span id="rcTokens"></span></div>
+          <hr />
+          <div class="qris" id="qris" aria-label="QRIS (contoh)"></div>
+          <p class="rc-center rc-dim">Scan QRIS untuk bayar · demo</p>
+          <hr />
+          <p class="rc-center">KODE TOKEN</p>
+          <p class="rc-center rc-code" id="rcCode"></p>
+          <hr />
+          <p class="rc-center rc-dim">Simpan struk ini. Terima kasih!</p>
+          <div class="receipt__actions">
+            <button class="btn btn--ink btn--block" id="copyBtn">Salin Kode</button>
+            <button class="btn btn--ghost btn--block" id="closeBtn">Tutup</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
