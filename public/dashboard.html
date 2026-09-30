@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard — Toko Token</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body class="app-body">
+  <header class="appnav wrap">
+    <a href="/" class="logo"><span class="logo__bolt">⚡</span>TOKO<b>TOKEN</b></a>
+    <div class="appnav__right">
+      <a href="/admin" class="pill pill--signal" id="adminLink" hidden>Admin</a>
+      <span class="pill" id="navEmail">…</span>
+      <button class="btn btn--ghost btn--sm" id="logoutBtn">Keluar</button>
+    </div>
+  </header>
+
+  <main class="app-main wrap" id="main" hidden>
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Dashboard</p>
+        <h1 id="hello">Halo!</h1>
+      </div>
+      <p class="muted mono small" id="lowBalance" hidden>Saldo menipis — isi lagi biar API nggak berhenti.</p>
+    </div>
+
+    <div class="grid-2">
+      <!-- Saldo + top up -->
+      <div class="device device--flat" id="topup">
+        <div class="device__head">
+          <span class="device__brand">TT-01 · SALDO KAMU</span>
+          <span class="device__led" id="led"></span>
+        </div>
+        <div class="lcd">
+          <div class="lcd__row"><span class="lcd__label">SISA SALDO</span><span class="lcd__label">RUPIAH</span></div>
+          <div class="lcd__digits" id="balanceDigits"></div>
+          <div class="lcd__row"><span class="lcd__label" id="balanceHint">—</span><span class="lcd__label" id="balanceExact">—</span></div>
+        </div>
+        <div class="keypad" id="keypad"></div>
+        <label class="device__field">
+          <span>Nominal lain</span>
+          <div class="rp-input"><i>Rp</i><input id="customRp" type="text" inputmode="numeric" /></div>
+        </label>
+        <button class="btn btn--signal btn--block" id="payBtn">Bayar —</button>
+        <p class="device__note" id="payNote">Pembayaran diproses Midtrans · QRIS, e-wallet, Virtual Account</p>
+      </div>
+
+      <div class="stack">
+        <!-- Mulai cepat -->
+        <section class="card">
+          <div class="section-title"><h2>Mulai cepat</h2></div>
+          <div class="field">
+            <span>Base URL</span>
+            <div class="copyrow"><code class="codebox" id="baseUrl">—</code><button class="btn btn--ink btn--sm" id="copyBase">Salin</button></div>
+          </div>
+          <p class="small muted">Pakai SDK OpenAI mana pun: isi <code>base_url</code> di atas dan API key dari bawah. Model yang tersedia:</p>
+          <div class="table-wrap">
+            <table class="t">
+              <thead><tr><th>Model</th><th class="num">Input/1M</th><th class="num">Output/1M</th></tr></thead>
+              <tbody id="modelRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- API keys -->
+        <section class="card">
+          <div class="section-title"><h2>API key</h2></div>
+          <div class="secret" id="secretBox" hidden>
+            <p>Simpan key ini sekarang. Demi keamanan, key ini nggak akan ditampilkan lagi.</p>
+            <div class="copyrow"><code class="codebox" id="secretValue"></code><button class="btn btn--ink btn--sm" id="copySecret">Salin</button></div>
+          </div>
+          <form class="copyrow" id="keyForm">
+            <input class="input" name="name" placeholder="Nama key, mis. laptop / server-prod" maxlength="60" required />
+            <button class="btn btn--ink" type="submit">Buat key</button>
+          </form>
+          <div class="table-wrap">
+            <table class="t">
+              <thead><tr><th>Nama</th><th>Key</th><th>Terakhir dipakai</th><th></th></tr></thead>
+              <tbody id="keyRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Pemakaian -->
+    <section class="card mt-24" id="usageCard">
+      <div class="section-title"><h2>Pemakaian 30 hari</h2><span class="mono small muted" id="usageTotal"></span></div>
+      <div class="chart" id="chart">
+        <div class="chart__plot" id="chartPlot" role="img" aria-label="Grafik biaya pemakaian per hari"></div>
+        <div class="chart__axis"><span id="chartStart"></span><span id="chartEnd"></span></div>
+        <div class="chart__tip" id="chartTip"></div>
+      </div>
+      <h3 class="subhead">Request terakhir</h3>
+      <div class="table-wrap">
+        <table class="t">
+          <thead><tr><th>Waktu</th><th>Model</th><th>Key</th><th class="num">Input</th><th class="num">Output</th><th class="num">Biaya</th><th>Status</th></tr></thead>
+          <tbody id="usageRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="grid-2 mt-24">
+      <section class="card">
+        <div class="section-title"><h2>Riwayat top up</h2></div>
+        <div class="table-wrap">
+          <table class="t">
+            <thead><tr><th>Order</th><th>Tanggal</th><th class="num">Nominal</th><th>Status</th></tr></thead>
+            <tbody id="payRows"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="card">
+        <div class="section-title"><h2>Ganti password</h2></div>
+        <form class="form" id="pwForm" novalidate>
+          <label class="field"><span>Password lama</span><input name="current" type="password" autocomplete="current-password" required /></label>
+          <label class="field"><span>Password baru (min. 8)</span><input name="password" type="password" autocomplete="new-password" minlength="8" required /></label>
+          <p class="form-error" role="alert"></p>
+          <button class="btn btn--ink" type="submit">Simpan</button>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <!-- Struk pembayaran -->
+  <div class="overlay" id="overlay" hidden>
+    <div class="printer">
+      <div class="printer__slot"></div>
+      <div class="receipt" id="receipt" role="dialog" aria-modal="true" aria-labelledby="rcTitle">
+        <div class="receipt__body">
+          <p class="rc-center rc-big" id="rcTitle">TOKO TOKEN</p>
+          <p class="rc-center" id="rcHeadline">Struk Isi Saldo</p>
+          <p class="rc-center rc-dim" id="rcDate"></p>
+          <hr />
+          <div class="rc-line"><span>Order</span><span id="rcOrder"></span></div>
+          <div class="rc-line"><span>Metode</span><span id="rcMethod"></span></div>
+          <div class="rc-line rc-strong"><span>Nominal</span><span id="rcAmount"></span></div>
+          <hr />
+          <p class="rc-center">STATUS</p>
+          <p class="rc-center rc-code" id="rcStatus"></p>
+          <p class="rc-center rc-dim" id="rcSub"></p>
+          <hr />
+          <div class="rc-line rc-strong"><span>Saldo sekarang</span><span id="rcBalance"></span></div>
+          <hr />
+          <p class="rc-center rc-dim">Terima kasih!</p>
+          <div class="receipt__actions">
+            <button class="btn btn--ink btn--block" id="mockPay" hidden>Simulasikan bayar (dev)</button>
+            <a class="btn btn--ink btn--block" id="continuePay" hidden>Lanjutkan pembayaran</a>
+            <button class="btn btn--ghost btn--block" id="closeReceipt">Tutup</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/dashboard.js"></script>
+</body>
+</html>

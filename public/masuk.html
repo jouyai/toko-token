@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Masuk — Toko Token</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body class="app-body" data-page="login">
+  <header class="nav wrap">
+    <a href="/" class="logo"><span class="logo__bolt">⚡</span>TOKO<b>TOKEN</b></a>
+    <a href="/" class="nav__login">← Kembali</a>
+  </header>
+  <main class="app-main wrap">
+    <section class="auth">
+      <div class="auth__side">
+        <p class="eyebrow">Selamat datang lagi</p>
+        <h1>Cek saldo,<br /><em>isi lagi.</em></h1>
+        <p class="lead">Masuk untuk lihat sisa saldo, bikin API key, dan pantau pemakaian.</p>
+      </div>
+      <div class="card">
+        <h2>Masuk</h2>
+        <form class="form" id="form" novalidate>
+          <label class="field"><span>Email</span><input name="email" type="email" autocomplete="email" required /></label>
+          <label class="field"><span>Password</span><input name="password" type="password" autocomplete="current-password" required /></label>
+          <p class="form-error" role="alert"></p>
+          <button class="btn btn--signal btn--block" type="submit">Masuk ↵</button>
+        </form>
+        <p class="form-foot"><a href="/lupa-password">Lupa password?</a> · Belum punya akun? <a href="/daftar" id="toRegister">Daftar</a></p>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/js/auth.js"></script>
+</body>
+</html>

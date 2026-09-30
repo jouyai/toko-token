@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Toko Token</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body class="app-body">
+  <header class="appnav wrap">
+    <a href="/" class="logo"><span class="logo__bolt">⚡</span>TOKO<b>TOKEN</b></a>
+    <div class="appnav__right">
+      <span class="pill pill--signal">Admin</span>
+      <a href="/dashboard" class="pill">Dashboard saya</a>
+    </div>
+  </header>
+
+  <main class="app-main wrap" id="main" hidden>
+    <div class="dash-head"><div><p class="eyebrow">Panel admin</p><h1>Toko</h1></div></div>
+
+    <div class="seg-tabs" role="tablist">
+      <button class="is-active" data-tab="overview" role="tab">Ringkasan</button>
+      <button data-tab="models" role="tab">Model &amp; Harga</button>
+      <button data-tab="users" role="tab">User</button>
+      <button data-tab="payments" role="tab">Pembayaran</button>
+    </div>
+
+    <!-- Ringkasan -->
+    <section data-panel="overview">
+      <div class="stats" id="stats"></div>
+      <div class="card">
+        <div class="section-title"><h2>Pemakaian per model · 7 hari</h2></div>
+        <div class="table-wrap"><table class="t">
+          <thead><tr><th>Model</th><th class="num">Request</th><th class="num">Token</th><th class="num">Pendapatan</th></tr></thead>
+          <tbody id="byModel"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- Model -->
+    <section data-panel="models" hidden>
+      <div class="card">
+        <div class="section-title"><h2 id="modelFormTitle">Tambah model</h2><span class="mono small muted" id="routerStatus"></span></div>
+        <form class="model-form" id="modelForm" novalidate>
+          <label class="field"><span>ID publik</span><input name="id" required placeholder="glm-5.1" /></label>
+          <label class="field field--wide"><span>Model di 9router</span><input name="upstream_model" list="upstreamList" required placeholder="glm/glm-5.1 atau nama combo" /></label>
+          <label class="field"><span>Nama tampilan</span><input name="display_name" required placeholder="GLM 5.1" /></label>
+          <label class="field"><span>Harga input / 1M (Rp)</span><input name="input_price_rp" type="number" min="0" step="1" required /></label>
+          <label class="field"><span>Harga output / 1M (Rp)</span><input name="output_price_rp" type="number" min="0" step="1" required /></label>
+          <label class="field"><span>Vendor</span><input name="vendor" placeholder="Zhipu" /></label>
+          <label class="field"><span>Konteks</span><input name="context_label" placeholder="128K" /></label>
+          <label class="field"><span>Label</span><input name="tag" placeholder="Populer / Hemat" /></label>
+          <label class="field"><span>Urutan</span><input name="sort_order" type="number" value="100" /></label>
+          <label class="check"><input type="checkbox" name="active" value="1" checked /><span>Aktif (dijual)</span></label>
+          <div class="actions">
+            <button class="btn btn--signal" type="submit">Simpan model</button>
+            <button class="btn btn--ghost" type="button" id="modelReset">Kosongkan</button>
+            <p class="form-error" role="alert"></p>
+          </div>
+        </form>
+        <datalist id="upstreamList"></datalist>
+      </div>
+      <div class="card mt-24">
+        <div class="section-title"><h2>Daftar model</h2></div>
+        <div class="table-wrap"><table class="t">
+          <thead><tr><th>ID publik</th><th>9router</th><th class="num">Input/1M</th><th class="num">Output/1M</th><th>Status</th><th></th></tr></thead>
+          <tbody id="modelRows"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- User -->
+    <section data-panel="users" hidden>
+      <div class="card">
+        <div class="section-title">
+          <h2>User</h2>
+          <form id="userSearch" class="copyrow"><input class="input" name="q" placeholder="Cari email / nama" /><button class="btn btn--ink btn--sm" type="submit">Cari</button></form>
+        </div>
+        <div class="table-wrap"><table class="t">
+          <thead><tr><th>User</th><th>Daftar</th><th>Terakhir pakai</th><th class="num">Saldo</th><th>Status</th><th></th></tr></thead>
+          <tbody id="userRows"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- Pembayaran -->
+    <section data-panel="payments" hidden>
+      <div class="card">
+        <div class="section-title"><h2>100 pembayaran terakhir</h2></div>
+        <div class="table-wrap"><table class="t">
+          <thead><tr><th>Order</th><th>User</th><th>Dibuat</th><th>Metode</th><th class="num">Nominal</th><th>Status</th></tr></thead>
+          <tbody id="payRows"></tbody>
+        </table></div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

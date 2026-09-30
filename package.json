@@ -1,0 +1,25 @@
+{
+  "name": "toko-token",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Toko token AI prabayar di depan 9router",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migrate": "node src/migrate.js",
+    "seed": "node scripts/seed-models.js",
+    "admin": "node scripts/admin.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "nodemailer": "^10.0.13",
+    "pg": "^8.23.0",
+    "zod": "^4.6.5"
+  }
+}
