@@ -120,6 +120,50 @@ r.delete("/models/:id", async (req, res) => {
   res.json({ ok: true });
 });
 
+// Nama publik tanpa prefix router/provider, mis. "cc/claude-sonnet-4.5" -> "claude-sonnet-4.5".
+export function publicIdFor(upstream) {
+  return (
+    String(upstream).split("/").pop().toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^[-.]+|[-.]+$/g, "").slice(0, 80) || "model"
+  );
+}
+const prettyName = (id) =>
+  id.split(/[-_]/).filter(Boolean).map((w) => (/^\d/.test(w) ? w : w[0].toUpperCase() + w.slice(1))).join(" ");
+
+// Impor semua model 9router yang belum dijual, dengan harga default.
+r.post("/models/import", async (req, res) => {
+  const body = parse(z.object({
+    input_price_rp: z.coerce.number().int().min(1, "Harga input minimal Rp1"),
+    output_price_rp: z.coerce.number().int().min(1, "Harga output minimal Rp1"),
+    active: z.boolean().default(false),
+    only: z.array(z.string()).optional(),
+  }), req.body);
+  let upstream;
+  try {
+    upstream = await listUpstreamModels();
+  } catch (err) {
+    throw new HttpError(502, `Tidak bisa menghubungi 9router: ${err.message}`);
+  }
+  if (body.only) upstream = upstream.filter((u) => body.only.includes(u));
+  const { rows } = await query("SELECT id, upstream_model FROM models");
+  const mapped = new Set(rows.map((r) => r.upstream_model));
+  const taken = new Set(rows.map((r) => r.id));
+  const added = [];
+  for (const up of upstream) {
+    if (mapped.has(up)) continue;
+    let id = publicIdFor(up);
+    for (let n = 2; taken.has(id); n++) id = `${publicIdFor(up)}-${n}`;
+    taken.add(id);
+    await query(
+      `INSERT INTO models (id, upstream_model, display_name, input_price_rp, output_price_rp, active, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, 500)`,
+      [id, up, prettyName(id), body.input_price_rp, body.output_price_rp, body.active]
+    );
+    added.push({ id, upstream_model: up });
+  }
+  invalidateModelCache();
+  res.json({ added, skipped: upstream.length - added.length });
+});
+
 // Daftar model yang tersedia di 9router, untuk memudahkan mapping.
 r.get("/upstream-models", async (_req, res) => {
   try {

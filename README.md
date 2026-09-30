@@ -75,6 +75,7 @@ Kalau 9router sudah jalan di server lain, hapus service `9router` dari `docker-c
    - Kolom "Model di 9router" punya dropdown berisi model dan combo yang benar-benar tersedia di 9router kamu.
    - **ID publik** adalah nama yang dipakai pembeli di parameter `model`.
    - Harga diisi dalam Rupiah per 1 juta token, terpisah untuk input dan output.
+   - **Impor dari 9router:** tombol ini menambahkan sekaligus semua model 9router yang belum dijual, dengan harga default. Nama publiknya otomatis tanpa prefix router/provider (`cc/claude-x` jadi `claude-x`). Model hasil impor nonaktif dulu sampai kamu cek harganya, kecuali kamu centang "Langsung aktifkan".
    - Opsional: `docker compose exec app npm run seed` mengisi 3 contoh model. Sesuaikan mapping-nya dengan 9router kamu.
 
 ### 3. Midtrans
@@ -91,6 +92,29 @@ Midtrans biasanya minta website punya halaman Syarat & Ketentuan, Kebijakan Priv
 ### 4. Email
 
 Isi `SMTP_URL`, misalnya Brevo, Mailgun, Zoho, atau Gmail App Password. Tanpa email, user tidak bisa reset password, dan aplikasi menolak start di production.
+
+## Pembeli hanya melihat Toko Token
+
+Setiap respons API dibersihkan sebelum dikirim ke pembeli:
+
+- `id` respons diganti dengan id buatan kita, dan `model` diganti dengan nama publik.
+- Field non-standar dari provider/router dibuang, misalnya `provider`, `system_fingerprint`, dan detail usage khusus provider.
+- ID tool call dari provider (misalnya `toolu_…`) dienkripsi jadi `call_tt…`. ID ini otomatis dikembalikan ke bentuk aslinya waktu pembeli mengirim hasil tool.
+- Pesan error dari provider tidak pernah diteruskan. Pembeli hanya menerima pesan umum, dan detail aslinya dicatat di log server.
+- Komentar SSE dari upstream dibuang dari stream.
+
+Di website, nama router dan payment gateway tidak disebut di halaman promosi. Nama payment gateway tetap tercantum di halaman Privasi dan Syarat, karena UU PDP mewajibkan pihak pemroses data disebutkan.
+
+## API key per user
+
+Setiap akun membuat API key sendiri di dashboard. Satu akun boleh punya banyak key, misalnya satu per aplikasi. Key hanya ditampilkan sekali saat dibuat, dan di database hanya disimpan hash-nya. Pembeli bisa:
+
+```bash
+curl https://domainmu/v1/models -H "Authorization: Bearer tt_live_..."             # daftar model
+curl https://domainmu/v1/chat/completions -H "Authorization: Bearer tt_live_..." ...  # pakai model
+```
+
+Semua key milik satu akun memotong saldo akun itu. Kalau key bocor, pembeli cukup menghapusnya di dashboard, dan key itu langsung berhenti bekerja.
 
 ## Menentukan harga
 

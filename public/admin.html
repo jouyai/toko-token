@@ -66,6 +66,19 @@
         </form>
         <datalist id="upstreamList"></datalist>
       </div>
+      <div class="card mt-24" id="importCard">
+        <div class="section-title"><h2>Impor dari 9router</h2><span class="mono small muted" id="importInfo"></span></div>
+        <p class="small muted">Tambahkan sekaligus semua model 9router yang belum dijual. Nama publiknya otomatis tanpa prefix router/provider, jadi pembeli nggak tahu sumbernya. Harga bisa diubah per model setelahnya.</p>
+        <form class="model-form" id="importForm" novalidate>
+          <label class="field"><span>Harga input / 1M (Rp)</span><input name="input_price_rp" type="number" min="1" step="1" value="10000" required /></label>
+          <label class="field"><span>Harga output / 1M (Rp)</span><input name="output_price_rp" type="number" min="1" step="1" value="40000" required /></label>
+          <label class="check"><input type="checkbox" name="active" value="1" /><span>Langsung aktifkan (dijual)</span></label>
+          <div class="actions">
+            <button class="btn btn--ink" type="submit" id="importBtn">Impor model</button>
+            <p class="form-error" role="alert"></p>
+          </div>
+        </form>
+      </div>
       <div class="card mt-24">
         <div class="section-title"><h2>Daftar model</h2></div>
         <div class="table-wrap"><table class="t">

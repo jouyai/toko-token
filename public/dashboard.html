@@ -49,7 +49,7 @@
           <div class="rp-input"><i>Rp</i><input id="customRp" type="text" inputmode="numeric" /></div>
         </label>
         <button class="btn btn--signal btn--block" id="payBtn">Bayar —</button>
-        <p class="device__note" id="payNote">Pembayaran diproses Midtrans · QRIS, e-wallet, Virtual Account</p>
+        <p class="device__note" id="payNote">Pembayaran aman · QRIS, e-wallet, Virtual Account</p>
       </div>
 
       <div class="stack">
@@ -60,7 +60,7 @@
             <span>Base URL</span>
             <div class="copyrow"><code class="codebox" id="baseUrl">—</code><button class="btn btn--ink btn--sm" id="copyBase">Salin</button></div>
           </div>
-          <p class="small muted">Pakai SDK OpenAI mana pun: isi <code>base_url</code> di atas dan API key dari bawah. Model yang tersedia:</p>
+          <p class="small muted">Tiap akun punya API key sendiri (bisa lebih dari satu, mis. per aplikasi). Pakai SDK OpenAI mana pun: isi <code>base_url</code> di atas dan API key dari bawah. Daftar model juga bisa diambil lewat <code>GET /v1/models</code>. Model yang tersedia:</p>
           <div class="table-wrap">
             <table class="t">
               <thead><tr><th>Model</th><th class="num">Input/1M</th><th class="num">Output/1M</th></tr></thead>
@@ -75,6 +75,8 @@
           <div class="secret" id="secretBox" hidden>
             <p>Simpan key ini sekarang. Demi keamanan, key ini nggak akan ditampilkan lagi.</p>
             <div class="copyrow"><code class="codebox" id="secretValue"></code><button class="btn btn--ink btn--sm" id="copySecret">Salin</button></div>
+            <p class="small">Tes key-mu — lihat model yang bisa dipakai:</p>
+            <div class="copyrow"><code class="codebox" id="secretTest"></code><button class="btn btn--ink btn--sm" id="copyTest">Salin</button></div>
           </div>
           <form class="copyrow" id="keyForm">
             <input class="input" name="name" placeholder="Nama key, mis. laptop / server-prod" maxlength="60" required />

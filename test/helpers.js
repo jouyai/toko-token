@@ -43,15 +43,20 @@ export async function fakeRouter() {
     const usage = { prompt_tokens: 1000, completion_tokens: 500, total_tokens: 1500 };
     if (!body.stream) {
       res.writeHead(200, { "Content-Type": "application/json" });
+      const message = body.tools
+        ? { role: "assistant", content: null, tool_calls: [{ id: "toolu_rahasia123", type: "function", function: { name: "cuaca", arguments: "{}" }, provider_meta: "x" }] }
+        : { role: "assistant", content: "Halo juga!", provider_specific_fields: { a: 1 } };
       return res.end(JSON.stringify({
-        id: "c1", object: "chat.completion", model: body.model,
-        choices: [{ index: 0, message: { role: "assistant", content: "Halo juga!" }, finish_reason: "stop" }],
-        ...(body.model === "nousage/model" ? {} : { usage }),
+        id: "gen-upstream-xyz", object: "chat.completion", model: body.model, provider: "provider-rahasia",
+        system_fingerprint: "fp_rahasia", created: 1700000000,
+        choices: [{ index: 0, message, finish_reason: body.tools ? "tool_calls" : "stop" }],
+        ...(body.model === "nousage/model" ? {} : { usage: { ...usage, cache_creation_input_tokens: 0 } }),
       }));
     }
     res.writeHead(200, { "Content-Type": "text/event-stream" });
     const chunk = (o) => res.write(`data: ${JSON.stringify(o)}\n\n`);
-    chunk({ id: "c1", model: body.model, choices: [{ index: 0, delta: { role: "assistant", content: "Ha" } }] });
+    res.write(": OPENROUTER PROCESSING\n\n");
+    chunk({ id: "gen-upstream-xyz", provider: "provider-rahasia", model: body.model, choices: [{ index: 0, delta: { role: "assistant", content: "Ha" } }] });
     chunk({ id: "c1", model: body.model, choices: [{ index: 0, delta: { content: "lo!" } }] });
     if (body.stream_options?.include_usage) chunk({ id: "c1", model: body.model, choices: [], usage });
     res.end("data: [DONE]\n\n");

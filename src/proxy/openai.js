@@ -6,6 +6,7 @@ import { affordableOutputTokens, costMilli, estimateTokens } from "../lib/money.
 import { RateLimiter } from "../lib/ratelimit.js";
 import { chatCompletions } from "./router-client.js";
 import { SseTransformer, outputCharsOf } from "./sse.js";
+import { cleanCompletion, newCompletionId, publicErrorMessage, restoreToolIds } from "./sanitize.js";
 
 const r = Router();
 
@@ -103,7 +104,7 @@ r.post("/chat/completions", authKey, jsonBody, async (req, res) => {
   }
 
   // Batasi panjang output sesuai sisa saldo supaya saldo tidak jebol jauh ke minus.
-  const upstreamBody = { ...body, model: model.upstream_model };
+  const upstreamBody = { ...body, model: model.upstream_model, messages: restoreToolIds(body.messages) };
   const field = body.max_completion_tokens != null ? "max_completion_tokens" : "max_tokens";
   const requested = body[field] ?? null;
   const limit = requested ?? config.billing.defaultMaxOutputTokens;
@@ -145,10 +146,9 @@ r.post("/chat/completions", authKey, jsonBody, async (req, res) => {
       try { message = JSON.parse(text).error?.message || message; } catch {}
       await log(upstream.status, 0, 0, false);
       console.warn(`[proxy] upstream ${upstream.status} model=${model.upstream_model}: ${message}`);
-      // Pesan asli hanya diteruskan untuk kesalahan dari sisi pembeli (mis. konteks terlalu panjang).
-      // Selain itu disamarkan supaya detail 9router/provider tidak bocor.
+      // Pesan asli tidak pernah diteruskan (bisa menyebut nama provider/router); cukup dicatat di log.
       if ([400, 413, 422].includes(upstream.status)) {
-        return fail(res, upstream.status, message || "Permintaan ditolak oleh server model");
+        return fail(res, upstream.status, publicErrorMessage(upstream.status, message));
       }
       if (upstream.status === 429) {
         return fail(res, 429, "Server model sedang sibuk. Coba lagi sebentar lagi.", "rate_limit_error", "upstream_busy");
@@ -163,17 +163,16 @@ r.post("/chat/completions", authKey, jsonBody, async (req, res) => {
       const estimated = !(u && Number.isFinite(u.prompt_tokens) && Number.isFinite(u.completion_tokens));
       const pt = estimated ? estPrompt : u.prompt_tokens;
       const ct = estimated ? estimateTokens(outputCharsOf(json)) : u.completion_tokens;
-      json.model = model.id;
       const balance = await log(200, pt, ct, estimated);
       res.set("x-toko-balance-rp", (balance / 1000).toFixed(3));
-      return res.json(json);
+      return res.json(cleanCompletion(json, { id: newCompletionId(), model: model.id, keepUsage: true }));
     }
 
     // ----- Streaming (SSE) -----
     res.status(200);
     res.set({ "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", Connection: "keep-alive", "X-Accel-Buffering": "no" });
     res.flushHeaders();
-    const t = new SseTransformer({ publicModel: model.id, clientWantsUsage });
+    const t = new SseTransformer({ id: newCompletionId(), publicModel: model.id, clientWantsUsage });
     const decoder = new TextDecoder();
     try {
       for await (const chunk of upstream.body) {

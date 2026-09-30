@@ -119,11 +119,13 @@ $("#keyRows").addEventListener("click", async (e) => {
 bindForm($("#keyForm"), async (data) => {
   const { key } = await api("POST", "/account/keys", { name: data.name });
   $("#secretValue").textContent = key.secret;
+  $("#secretTest").textContent = `curl ${cfg.apiBaseUrl}/models -H "Authorization: Bearer ${key.secret}"`;
   $("#secretBox").hidden = false;
   $("#keyForm").reset();
   loadKeys();
 });
 $("#copySecret").addEventListener("click", (e) => copy($("#secretValue").textContent, e.currentTarget));
+$("#copyTest").addEventListener("click", (e) => copy($("#secretTest").textContent, e.currentTarget));
 
 // ---------- Pemakaian ----------
 async function loadUsage() {
@@ -218,7 +220,7 @@ async function openReceipt(orderId, { poll = false } = {}) {
     document.body.style.overflow = "hidden";
     $("#closeReceipt").focus({ preventScroll: true });
   }
-  // Setelah kembali dari Midtrans, cek status berkala sampai lunas (maks. ±3 menit).
+  // Setelah kembali dari halaman pembayaran, cek status berkala sampai lunas (maks. ±3 menit).
   clearTimeout(pollTimer);
   if (poll && data.payment.status === "pending") {
     let n = 0;
